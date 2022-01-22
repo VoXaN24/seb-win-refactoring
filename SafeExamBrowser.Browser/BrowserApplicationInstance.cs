@@ -10,6 +10,8 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using CefSharp;
+using CefSharp.WinForms.Handler;
+using CefSharp.WinForms.Host;
 using SafeExamBrowser.Applications.Contracts;
 using SafeExamBrowser.Applications.Contracts.Events;
 using SafeExamBrowser.Browser.Contracts.Events;
@@ -31,6 +33,8 @@ using SafeExamBrowser.UserInterface.Contracts.FileSystemDialog;
 using SafeExamBrowser.UserInterface.Contracts.MessageBox;
 using Syroot.Windows.IO;
 using BrowserSettings = SafeExamBrowser.Settings.Browser.BrowserSettings;
+using DisplayHandler = SafeExamBrowser.Browser.Handlers.DisplayHandler;
+using LifeSpanHandler = CefSharp.WinForms.Handler.LifeSpanHandler;
 using Request = SafeExamBrowser.Browser.Contracts.Filters.Request;
 using ResourceHandler = SafeExamBrowser.Browser.Handlers.ResourceHandler;
 using TitleChangedEventHandler = SafeExamBrowser.Applications.Contracts.Events.TitleChangedEventHandler;
@@ -51,7 +55,6 @@ namespace SafeExamBrowser.Browser
 		private readonly IText text;
 		private readonly IUserInterfaceFactory uiFactory;
 
-		private IBrowserControl control;
 		private IBrowserWindow window;
 		private bool isMainInstance;
 		private BrowserSettings settings;
@@ -63,6 +66,7 @@ namespace SafeExamBrowser.Browser
 			get { return isMainInstance ? settings.MainWindow : settings.AdditionalWindow; }
 		}
 
+		internal IBrowserControl Control { get; private set; }
 		internal int Id { get; }
 
 		public IntPtr Handle { get; private set; }
@@ -113,27 +117,21 @@ namespace SafeExamBrowser.Browser
 			window.BringToForeground();
 		}
 
-		internal void Initialize()
+		internal void InitializeControl()
 		{
-			InitializeControl();
-			InitializeWindow();
-		}
-
-		internal void Terminate()
-		{
-			window.Close();
-			control.Destroy();
-		}
-
-		private void InitializeControl()
-		{
+			var args = new PopupRequestedEventArgs();
 			var contextMenuHandler = new ContextMenuHandler();
 			var dialogHandler = new DialogHandler();
 			var displayHandler = new DisplayHandler();
 			var downloadLogger = logger.CloneFor($"{nameof(DownloadHandler)} #{Id}");
 			var downloadHandler = new DownloadHandler(appConfig, downloadLogger, settings, WindowSettings);
 			var keyboardHandler = new KeyboardHandler();
-			var lifeSpanHandler = new LifeSpanHandler();
+			var lifeSpanHandler = LifeSpanHandler
+				.Create(() => LifeSpanHandler_CreatePopup(args))
+				.OnBeforePopupCreated((wb, b, f, u, t, d, g, s) => LifeSpanHandler_PopupRequested(wb, b, f, u, t, d, g, s, args))
+				.OnPopupCreated((control, url) => LifeSpanHandler_PopupControlCreated(control, args, url))
+				.OnPopupDestroyed((control, browser) => LifeSpanHandler_PopupDestroyed(browser, control, args))
+				.Build();
 			var requestFilter = new RequestFilter();
 			var requestLogger = logger.CloneFor($"{nameof(RequestHandler)} #{Id}");
 			var resourceHandler = new ResourceHandler(appConfig, requestFilter, keyGenerator, logger, settings, WindowSettings, text);
@@ -152,14 +150,13 @@ namespace SafeExamBrowser.Browser
 			keyboardHandler.ZoomInRequested += ZoomInRequested;
 			keyboardHandler.ZoomOutRequested += ZoomOutRequested;
 			keyboardHandler.ZoomResetRequested += ZoomResetRequested;
-			lifeSpanHandler.PopupRequested += LifeSpanHandler_PopupRequested;
 			resourceHandler.SessionIdentifierDetected += (id) => SessionIdentifierDetected?.Invoke(id);
 			requestHandler.QuitUrlVisited += RequestHandler_QuitUrlVisited;
 			requestHandler.RequestBlocked += RequestHandler_RequestBlocked;
 
 			InitializeRequestFilter(requestFilter);
 
-			control = new BrowserControl(
+			Control = new BrowserControl(
 				appConfig,
 				contextMenuHandler,
 				dialogHandler,
@@ -171,13 +168,42 @@ namespace SafeExamBrowser.Browser
 				requestHandler,
 				text,
 				startUrl);
-			control.AddressChanged += Control_AddressChanged;
-			control.LoadFailed += Control_LoadFailed;
-			control.LoadingStateChanged += Control_LoadingStateChanged;
-			control.TitleChanged += Control_TitleChanged;
+			Control.AddressChanged += Control_AddressChanged;
+			Control.LoadFailed += Control_LoadFailed;
+			Control.LoadingStateChanged += Control_LoadingStateChanged;
+			Control.TitleChanged += Control_TitleChanged;
 
-			control.Initialize();
+			Control.Initialize();
 			logger.Debug("Initialized browser control.");
+		}
+
+		internal void InitializeWindow()
+		{
+			window = uiFactory.CreateBrowserWindow(Control, settings, isMainInstance);
+			window.Closing += Window_Closing;
+			window.AddressChanged += Window_AddressChanged;
+			window.BackwardNavigationRequested += Window_BackwardNavigationRequested;
+			window.DeveloperConsoleRequested += Window_DeveloperConsoleRequested;
+			window.FindRequested += Window_FindRequested;
+			window.ForwardNavigationRequested += Window_ForwardNavigationRequested;
+			window.HomeNavigationRequested += HomeNavigationRequested;
+			window.ReloadRequested += ReloadRequested;
+			window.ZoomInRequested += ZoomInRequested;
+			window.ZoomOutRequested += ZoomOutRequested;
+			window.ZoomResetRequested += ZoomResetRequested;
+			window.UpdateZoomLevel(CalculateZoomPercentage());
+			window.Show();
+			window.BringToForeground();
+
+			Handle = window.Handle;
+
+			logger.Debug("Initialized browser window.");
+		}
+
+		internal void Terminate()
+		{
+			window.Close();
+			Control.Destroy();
 		}
 
 		private void InitializeRequestFilter(IRequestFilter requestFilter)
@@ -208,29 +234,6 @@ namespace SafeExamBrowser.Browser
 			}
 		}
 
-		private void InitializeWindow()
-		{
-			window = uiFactory.CreateBrowserWindow(control, settings, isMainInstance);
-			window.Closing += Window_Closing;
-			window.AddressChanged += Window_AddressChanged;
-			window.BackwardNavigationRequested += Window_BackwardNavigationRequested;
-			window.DeveloperConsoleRequested += Window_DeveloperConsoleRequested;
-			window.FindRequested += Window_FindRequested;
-			window.ForwardNavigationRequested += Window_ForwardNavigationRequested;
-			window.HomeNavigationRequested += HomeNavigationRequested;
-			window.ReloadRequested += ReloadRequested;
-			window.ZoomInRequested += ZoomInRequested;
-			window.ZoomOutRequested += ZoomOutRequested;
-			window.ZoomResetRequested += ZoomResetRequested;
-			window.UpdateZoomLevel(CalculateZoomPercentage());
-			window.Show();
-			window.BringToForeground();
-
-			Handle = window.Handle;
-
-			logger.Debug("Initialized browser window.");
-		}
-
 		private void Control_AddressChanged(string address)
 		{
 			logger.Debug($"Navigated{(WindowSettings.UrlPolicy.CanLog() ? $" to '{address}'" : "")}.");
@@ -246,15 +249,15 @@ namespace SafeExamBrowser.Browser
 
 		private void Control_LoadFailed(int errorCode, string errorText, string url)
 		{
-			if (errorCode == (int) CefErrorCode.None)
+			if (errorCode == (int)CefErrorCode.None)
 			{
 				logger.Info($"Request{(WindowSettings.UrlPolicy.CanLog() ? $" for '{url}'" : "")} was successful.");
 			}
-			else if (errorCode == (int) CefErrorCode.Aborted)
+			else if (errorCode == (int)CefErrorCode.Aborted)
 			{
 				logger.Info($"Request{(WindowSettings.UrlPolicy.CanLog() ? $" for '{url}'" : "")} was aborted.");
 			}
-			else if (errorCode == (int) CefErrorCode.UnknownUrlScheme)
+			else if (errorCode == (int)CefErrorCode.UnknownUrlScheme)
 			{
 				logger.Info($"Request{(WindowSettings.UrlPolicy.CanLog() ? $" for '{url}'" : "")} contains unknown URL scheme and will be handled by the OS.");
 			}
@@ -265,14 +268,14 @@ namespace SafeExamBrowser.Browser
 
 				logger.Warn($"Request{(WindowSettings.UrlPolicy.CanLogError() ? $" for '{url}'" : "")} failed: {errorText} ({errorCode}).");
 
-				Task.Run(() => messageBox.Show(message, title, icon: MessageBoxIcon.Error, parent: window)).ContinueWith(_ => control.NavigateBackwards());
+				Task.Run(() => messageBox.Show(message, title, icon: MessageBoxIcon.Error, parent: window)).ContinueWith(_ => Control.NavigateBackwards());
 			}
 		}
 
 		private void Control_LoadingStateChanged(bool isLoading)
 		{
-			window.CanNavigateBackwards = WindowSettings.AllowBackwardNavigation && control.CanNavigateBackwards;
-			window.CanNavigateForwards = WindowSettings.AllowForwardNavigation && control.CanNavigateForwards;
+			window.CanNavigateBackwards = WindowSettings.AllowBackwardNavigation && Control.CanNavigateBackwards;
+			window.CanNavigateForwards = WindowSettings.AllowForwardNavigation && Control.CanNavigateForwards;
 			window.UpdateLoadingState(isLoading);
 		}
 
@@ -419,7 +422,7 @@ namespace SafeExamBrowser.Browser
 
 				if (navigate)
 				{
-					control.NavigateTo(url);
+					Control.NavigateTo(url);
 				}
 			}
 		}
@@ -432,32 +435,112 @@ namespace SafeExamBrowser.Browser
 			}
 		}
 
-		private void LifeSpanHandler_PopupRequested(PopupRequestedEventArgs args)
+		private ChromiumHostControl LifeSpanHandler_CreatePopup(PopupRequestedEventArgs args)
 		{
-			var validCurrentUri = Uri.TryCreate(control.Address, UriKind.Absolute, out var currentUri);
-			var validNewUri = Uri.TryCreate(args.Url, UriKind.Absolute, out var newUri);
+			try
+			{
+				PopupRequested?.Invoke(args);
+			}
+			catch (Exception e)
+			{
+				logger.Error($"Failed to create popup control: {e.Message}", e);
+			}
+
+			return new ChromiumHostControl(); // args.Instance.Control as ChromiumHostControl;
+		}
+
+		private void LifeSpanHandler_PopupControlCreated(ChromiumHostControl control, PopupRequestedEventArgs args, string url)
+		{
+			try
+			{
+				args.Instance.InitializeWindow();
+				//args.Instance.Control.NavigateTo(url);
+			}
+			catch (Exception e)
+			{
+				logger.Error($"Failed to initialize popup window: {e.Message}", e);
+			}
+		}
+
+		private void LifeSpanHandler_PopupDestroyed(IBrowser browser, ChromiumHostControl control, PopupRequestedEventArgs args)
+		{
+			try
+			{
+				if (control.InvokeRequired)
+				{
+					logger.Warn("INVOKE REQUIRED");
+
+					control.Invoke(new Action(() =>
+					{
+						logger.Warn("INVOKING");
+
+						args.Instance.Terminate();
+
+						if (!control.IsDisposed && control.IsHandleCreated)
+						{
+							logger.Warn("Disposed!");
+							control.Dispose();
+						}
+					}));
+				}
+				else
+				{
+					logger.Warn("INVOKE NOT REQUIRED");
+
+					args.Instance.Terminate();
+
+					if (!control.IsDisposed && control.IsHandleCreated)
+					{
+						logger.Warn("Disposed!");
+						control.Dispose();
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				logger.Error($"Failed to destroy popup: {e.Message}", e);
+			}
+		}
+
+		private PopupCreation LifeSpanHandler_PopupRequested(
+			IWebBrowser chromiumWebBrowser,
+			IBrowser browser,
+			IFrame frame,
+			string targetUrl,
+			string targetFrameName,
+			WindowOpenDisposition targetDisposition,
+			bool userGesture,
+			IBrowserSettings browserSettings,
+			PopupRequestedEventArgs args)
+		{
+			var creation = PopupCreation.Cancel;
+			var validCurrentUri = Uri.TryCreate(Control.Address, UriKind.Absolute, out var currentUri);
+			var validNewUri = Uri.TryCreate(targetUrl, UriKind.Absolute, out var newUri);
 			var sameHost = validCurrentUri && validNewUri && string.Equals(currentUri.Host, newUri.Host, StringComparison.OrdinalIgnoreCase);
 
 			switch (settings.PopupPolicy)
 			{
 				case PopupPolicy.Allow:
 				case PopupPolicy.AllowSameHost when sameHost:
-					logger.Debug($"Forwarding request to open new window{(WindowSettings.UrlPolicy.CanLog() ? $" for '{args.Url}'" : "")}...");
-					PopupRequested?.Invoke(args);
+					logger.Debug($"Forwarding request to open new window{(WindowSettings.UrlPolicy.CanLog() ? $" for '{targetUrl}'" : "")}...");
+					args.Url = targetUrl;
+					creation = PopupCreation.Continue;
 					break;
 				case PopupPolicy.AllowSameWindow:
 				case PopupPolicy.AllowSameHostAndWindow when sameHost:
-					logger.Info($"Discarding request to open new window and loading{(WindowSettings.UrlPolicy.CanLog() ? $" '{args.Url}'" : "")} directly...");
-					control.NavigateTo(args.Url);
+					logger.Info($"Discarding request to open new window and loading{(WindowSettings.UrlPolicy.CanLog() ? $" '{targetUrl}'" : "")} directly...");
+					Control.NavigateTo(targetUrl);
 					break;
 				case PopupPolicy.AllowSameHost when !sameHost:
 				case PopupPolicy.AllowSameHostAndWindow when !sameHost:
-					logger.Info($"Blocked request to open new window{(WindowSettings.UrlPolicy.CanLog() ? $" for '{args.Url}'" : "")} as it targets a different host.");
+					logger.Info($"Blocked request to open new window{(WindowSettings.UrlPolicy.CanLog() ? $" for '{targetUrl}'" : "")} as it targets a different host.");
 					break;
 				default:
-					logger.Info($"Blocked request to open new window{(WindowSettings.UrlPolicy.CanLog() ? $" for '{args.Url}'" : "")}.");
+					logger.Info($"Blocked request to open new window{(WindowSettings.UrlPolicy.CanLog() ? $" for '{targetUrl}'" : "")}.");
 					break;
 			}
+
+			return creation;
 		}
 
 		private void RequestHandler_QuitUrlVisited(string url)
@@ -504,7 +587,7 @@ namespace SafeExamBrowser.Browser
 				var message = text.Get(TextKey.MessageBox_BrowserNavigationBlocked).Replace("%%URL%%", WindowSettings.UrlPolicy.CanLogError() ? url : "");
 				var title = text.Get(TextKey.MessageBox_BrowserNavigationBlockedTitle);
 
-				control.TitleChanged -= Control_TitleChanged;
+				Control.TitleChanged -= Control_TitleChanged;
 
 				if (url.Equals(startUrl, StringComparison.OrdinalIgnoreCase))
 				{
@@ -513,7 +596,7 @@ namespace SafeExamBrowser.Browser
 				}
 
 				messageBox.Show(message, title, parent: window);
-				control.TitleChanged += Control_TitleChanged;
+				Control.TitleChanged += Control_TitleChanged;
 			});
 		}
 
@@ -526,7 +609,7 @@ namespace SafeExamBrowser.Browser
 				if (result == MessageBoxResult.Yes)
 				{
 					logger.Debug("The user confirmed reloading the current page...");
-					control.Reload();
+					Control.Reload();
 				}
 				else
 				{
@@ -536,7 +619,7 @@ namespace SafeExamBrowser.Browser
 			else if (WindowSettings.AllowReloading)
 			{
 				logger.Debug("Reloading current page...");
-				control.Reload();
+				Control.Reload();
 			}
 			else
 			{
@@ -551,7 +634,7 @@ namespace SafeExamBrowser.Browser
 			if (isValid)
 			{
 				logger.Debug($"The user requested to navigate to '{address}', the URI is valid.");
-				control.NavigateTo(address);
+				Control.NavigateTo(address);
 			}
 			else
 			{
@@ -563,34 +646,34 @@ namespace SafeExamBrowser.Browser
 		private void Window_BackwardNavigationRequested()
 		{
 			logger.Debug("Navigating backwards...");
-			control.NavigateBackwards();
+			Control.NavigateBackwards();
 		}
 
 		private void Window_Closing()
 		{
 			logger.Info($"Instance has terminated.");
-			control.Destroy();
+			Control.Destroy();
 			Terminated?.Invoke(Id);
 		}
 
 		private void Window_DeveloperConsoleRequested()
 		{
 			logger.Debug("Showing developer console...");
-			control.ShowDeveloperConsole();
+			Control.ShowDeveloperConsole();
 		}
 
 		private void Window_FindRequested(string term, bool isInitial, bool caseSensitive, bool forward = true)
 		{
 			if (settings.AllowFind)
 			{
-				control.Find(term, isInitial, caseSensitive, forward);
+				Control.Find(term, isInitial, caseSensitive, forward);
 			}
 		}
 
 		private void Window_ForwardNavigationRequested()
 		{
 			logger.Debug("Navigating forwards...");
-			control.NavigateForwards();
+			Control.NavigateForwards();
 		}
 
 		private void ZoomInRequested()
@@ -598,7 +681,7 @@ namespace SafeExamBrowser.Browser
 			if (settings.AllowPageZoom && CalculateZoomPercentage() < 300)
 			{
 				zoomLevel += ZOOM_FACTOR;
-				control.Zoom(zoomLevel);
+				Control.Zoom(zoomLevel);
 				window.UpdateZoomLevel(CalculateZoomPercentage());
 				logger.Debug($"Increased page zoom to {CalculateZoomPercentage()}%.");
 			}
@@ -609,7 +692,7 @@ namespace SafeExamBrowser.Browser
 			if (settings.AllowPageZoom && CalculateZoomPercentage() > 25)
 			{
 				zoomLevel -= ZOOM_FACTOR;
-				control.Zoom(zoomLevel);
+				Control.Zoom(zoomLevel);
 				window.UpdateZoomLevel(CalculateZoomPercentage());
 				logger.Debug($"Decreased page zoom to {CalculateZoomPercentage()}%.");
 			}
@@ -620,7 +703,7 @@ namespace SafeExamBrowser.Browser
 			if (settings.AllowPageZoom)
 			{
 				zoomLevel = 0;
-				control.Zoom(0);
+				Control.Zoom(0);
 				window.UpdateZoomLevel(CalculateZoomPercentage());
 				logger.Debug($"Reset page zoom to {CalculateZoomPercentage()}%.");
 			}

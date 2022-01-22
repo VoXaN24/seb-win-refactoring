@@ -170,12 +170,12 @@ namespace SafeExamBrowser.Browser
 			Thread.Sleep(500);
 		}
 
-		private void CreateNewInstance(string url = null)
+		private void CreateNewInstance(PopupRequestedEventArgs args = default(PopupRequestedEventArgs))
 		{
 			var id = ++instanceIdCounter;
 			var isMainInstance = instances.Count == 0;
 			var instanceLogger = logger.CloneFor($"Browser Instance #{id}");
-			var startUrl = url ?? GenerateStartUrl();
+			var startUrl = args?.Url ?? GenerateStartUrl();
 			var instance = new BrowserApplicationInstance(
 				appConfig,
 				settings,
@@ -190,15 +190,24 @@ namespace SafeExamBrowser.Browser
 				uiFactory,
 				startUrl);
 
-			instance.ConfigurationDownloadRequested += (fileName, args) => ConfigurationDownloadRequested?.Invoke(fileName, args);
+			instance.ConfigurationDownloadRequested += (f, a) => ConfigurationDownloadRequested?.Invoke(f, a);
 			instance.PopupRequested += Instance_PopupRequested;
 			instance.ResetRequested += Instance_ResetRequested;
 			instance.SessionIdentifierDetected += (i) => SessionIdentifierDetected?.Invoke(i);
 			instance.Terminated += Instance_Terminated;
 			instance.TerminationRequested += () => TerminationRequested?.Invoke();
 
-			instance.Initialize();
+			instance.InitializeControl();
 			instances.Add(instance);
+
+			if (args != default(PopupRequestedEventArgs))
+			{
+				args.Instance = instance;
+			}
+			else
+			{
+				instance.InitializeWindow();
+			}
 
 			logger.Info($"Created browser instance {instance.Id}.");
 			WindowsChanged?.Invoke();
@@ -415,7 +424,7 @@ namespace SafeExamBrowser.Browser
 		private void Instance_PopupRequested(PopupRequestedEventArgs args)
 		{
 			logger.Info($"Received request to create new instance{(settings.AdditionalWindow.UrlPolicy.CanLog() ? $" for '{args.Url}'" : "")}...");
-			CreateNewInstance(args.Url);
+			CreateNewInstance(args);
 		}
 
 		private void Instance_ResetRequested()

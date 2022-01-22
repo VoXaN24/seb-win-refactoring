@@ -10,6 +10,7 @@ namespace SafeExamBrowser.Browser.Events
 {
 	internal class PopupRequestedEventArgs
 	{
+		public BrowserApplicationInstance Instance { get; set; }
 		public string Url { get; set; }
 	}
 }
