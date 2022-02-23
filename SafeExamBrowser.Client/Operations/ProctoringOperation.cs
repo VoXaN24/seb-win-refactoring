@@ -51,7 +51,7 @@ namespace SafeExamBrowser.Client.Operations
 		{
 			if (Context.Settings.Proctoring.Enabled)
 			{
-				logger.Info("Initializing proctoring...");
+				/*logger.Info("Initializing proctoring...");
 				StatusChanged?.Invoke(TextKey.OperationStatus_InitializeProctoring);
 
 				controller.Initialize(Context.Settings.Proctoring);
@@ -66,7 +66,7 @@ namespace SafeExamBrowser.Client.Operations
 				if (Context.Settings.Proctoring.ShowTaskbarNotification)
 				{
 					taskbar.AddNotificationControl(uiFactory.CreateNotificationControl(notification, Location.Taskbar));
-				}
+				}*/
 			}
 
 			return OperationResult.Success;

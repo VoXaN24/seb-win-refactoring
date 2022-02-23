@@ -38,7 +38,6 @@ namespace SafeExamBrowser.Client.Operations
 
 			displayMonitor.PreventSleepMode();
 			displayMonitor.InitializePrimaryDisplay(Context.Settings.Taskbar.EnableTaskbar ? taskbar.GetAbsoluteHeight() : 0);
-			displayMonitor.StartMonitoringDisplayChanges();
 
 			return OperationResult.Success;
 		}

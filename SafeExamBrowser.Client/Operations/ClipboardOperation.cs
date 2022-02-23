@@ -30,14 +30,12 @@ namespace SafeExamBrowser.Client.Operations
 
 		public override OperationResult Perform()
 		{
-			EmptyClipboard();
 
 			return OperationResult.Success;
 		}
 
 		public override OperationResult Revert()
 		{
-			EmptyClipboard();
 
 			return OperationResult.Success;
 		}
