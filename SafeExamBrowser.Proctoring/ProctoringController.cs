@@ -77,10 +77,10 @@ namespace SafeExamBrowser.Proctoring
 			{
 				window?.BringToForeground();
 			}
-			else if (settings.WindowVisibility == WindowVisibility.AllowToHide || settings.WindowVisibility == WindowVisibility.AllowToShow)
+			/*else if (settings.WindowVisibility == WindowVisibility.AllowToHide || settings.WindowVisibility == WindowVisibility.AllowToShow)
 			{
 				window?.Toggle();
-			}
+			}*/
 		}
 
 		public void Initialize(ProctoringSettings settings)

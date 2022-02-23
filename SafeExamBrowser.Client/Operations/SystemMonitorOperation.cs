@@ -33,7 +33,7 @@ namespace SafeExamBrowser.Client.Operations
 			logger.Info("Initializing system events...");
 			StatusChanged?.Invoke(TextKey.OperationStatus_InitializeSystemEvents);
 
-			systemMonitor.Start();
+			/*systemMonitor.Start();*/
 
 			return OperationResult.Success;
 		}

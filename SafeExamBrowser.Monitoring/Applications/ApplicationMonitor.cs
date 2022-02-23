@@ -260,7 +260,7 @@ namespace SafeExamBrowser.Monitoring.Applications
 		{
 			foreach (var application in settings.Blacklist)
 			{
-				blacklist.Add(application);
+				/*blacklist.Add(application);*/
 			}
 
 			logger.Debug($"Initialized blacklist with {blacklist.Count} applications{(blacklist.Any() ? $": {string.Join(", ", blacklist.Select(a => a.ExecutableName))}" : ".")}");
