@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+using System;
+using SafeExamBrowser.UserInterface.Contracts.Browser.Data;
 using SafeExamBrowser.UserInterface.Contracts.Browser.Events;
 
 namespace SafeExamBrowser.UserInterface.Contracts.Browser
@@ -32,6 +34,11 @@ namespace SafeExamBrowser.UserInterface.Contracts.Browser
 		bool CanNavigateForwards { get; }
 
 		/// <summary>
+		/// The user interface control to be embedded in an <see cref="IBrowserWindow"/>.
+		/// </summary>
+		object EmbeddableControl { get; }
+
+		/// <summary>
 		/// Event fired when the address of the browser control changes.
 		/// </summary>
 		event AddressChangedEventHandler AddressChanged;
@@ -55,6 +62,11 @@ namespace SafeExamBrowser.UserInterface.Contracts.Browser
 		/// Finalizes the browser control (e.g. stops audio / video playback) and releases all used resources.
 		/// </summary>
 		void Destroy();
+
+		/// <summary>
+		/// Executes the given JavaScript code in the browser.
+		/// </summary>
+		void ExecuteJavascript(string code, Action<JavascriptResult> callback);
 
 		/// <summary>
 		/// Attempts to find the given term on the current page according to the specified parameters.

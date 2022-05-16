@@ -7,6 +7,7 @@
  */
 
 using System;
+using SafeExamBrowser.Browser.Contracts.Events;
 using SafeExamBrowser.Core.Contracts.Resources.Icons;
 using SafeExamBrowser.UserInterface.Contracts.Browser.Data;
 using SafeExamBrowser.UserInterface.Contracts.Browser.Events;
@@ -28,7 +29,7 @@ namespace SafeExamBrowser.UserInterface.Contracts.Browser
 		/// Enables the forward navigation button.
 		/// </summary>
 		bool CanNavigateForwards { set; }
-		
+
 		/// <summary>
 		/// The native handle of the window.
 		/// </summary>
@@ -65,6 +66,11 @@ namespace SafeExamBrowser.UserInterface.Contracts.Browser
 		event ActionRequestedEventHandler HomeNavigationRequested;
 
 		/// <summary>
+		/// Event fired when the browser window wants to lose focus to the taskbar.
+		/// </summary>
+		event LoseFocusRequestedEventHandler LoseFocusRequested;
+
+		/// <summary>
 		/// Event fired when the user would like to reload the current page.
 		/// </summary>
 		event ActionRequestedEventHandler ReloadRequested;
@@ -83,6 +89,22 @@ namespace SafeExamBrowser.UserInterface.Contracts.Browser
 		/// Event fired when the user would like to reset the zoom factor.
 		/// </summary>
 		event ActionRequestedEventHandler ZoomResetRequested;
+
+		/// <summary>
+		/// Sets the focus on the address bar of the window.
+		/// </summary>
+		void FocusAddressBar();
+
+		/// <summary>
+		/// Sets the focus on the browser content of the window.
+		/// </summary>
+		void FocusBrowser();
+
+		/// <summary>
+		/// Sets the focus on the toolbar of the window. If the parameter is set to true, the first focusable control on the toolbar gets focused.
+		/// If it is set to false, the last one.
+		/// </summary>
+		void FocusToolbar(bool forward);
 
 		/// <summary>
 		/// Displays the find toolbar to search the content of a page.

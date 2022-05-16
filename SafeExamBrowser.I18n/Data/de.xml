@@ -48,6 +48,27 @@
     <Entry key="BrowserWindow_FindMenuItem">
         Seite durchsuchen...
     </Entry>
+    <Entry key="BrowserWindow_ReloadButton">
+        Neu laden
+    </Entry>
+    <Entry key="BrowserWindow_BackwardButton">
+        Rückwärts
+    </Entry>
+    <Entry key="BrowserWindow_ForwardButton">
+        Vorwärts
+    </Entry>
+    <Entry key="BrowserWindow_DownloadsButton">
+        Download
+    </Entry>
+    <Entry key="BrowserWindow_HomeButton">
+        Home
+    </Entry>
+    <Entry key="BrowserWindow_MenuButton">
+        Menü
+    </Entry>
+    <Entry key="BrowserWindow_UrlTextBox">
+        URL eingeben
+    </Entry>
     <Entry key="BrowserWindow_ZoomMenuItem">
         Seiten-Zoom
     </Entry>
@@ -231,6 +252,12 @@
     <Entry key="MessageBox_DisplayConfigurationInternalOrExternal">
         interne(r) oder externe(r)
     </Entry>
+    <Entry key="MessageBox_DownloadNotAllowed">
+        Das Herunterladen von Dateien ist in den aktuellen SEB-Einstellungen nicht erlaubt. Bitte melden Sie dies Ihrem Prüfungsanbieter.
+    </Entry>
+    <Entry key="MessageBox_DownloadNotAllowedTitle">
+        Herunterladen nicht erlaubt!
+    </Entry>
     <Entry key="MessageBox_InvalidConfigurationData">
         Die Konfigurations-Ressource "%%URI%%" enthält ungültige Daten!
     </Entry>
@@ -315,6 +342,12 @@
     <Entry key="MessageBox_RemoteSessionNotAllowedTitle">
         Remote-Sitzung erkannt
     </Entry>
+    <Entry key="MessageBox_ServerReconfigurationWarning">
+        Es läuft bereits eine SEB-Server-Sitzung. Es ist nicht erlaubt, sich für eine andere SEB-Server-Sitzung neu zu konfigurieren.
+    </Entry>
+    <Entry key="MessageBox_ServerReconfigurationWarningTitle">
+        Rekonfiguration nicht erlaubt
+    </Entry>
     <Entry key="MessageBox_ServiceUnavailableError">
         Fehler beim Initialisieren des SEB-Service! SEB wird sich nun beenden da der Service als obligatorisch konfiguriert ist.
     </Entry>
@@ -350,6 +383,12 @@
     </Entry>
     <Entry key="MessageBox_UnexpectedConfigurationErrorTitle">
         Konfigurations-Fehler
+    </Entry>
+    <Entry key="MessageBox_UploadNotAllowed">
+        Das Hochladen von Dateien ist in den aktuellen SEB-Einstellungen nicht erlaubt. Bitte melden Sie dies Ihrem Prüfungsanbieter.
+    </Entry>
+    <Entry key="MessageBox_UploadNotAllowedTitle">
+        Hochladen nicht erlaubt!
     </Entry>
     <Entry key="MessageBox_VirtualMachineNotAllowed">
         Dieser Computer scheint eine virtuelle Maschine zu sein. Die ausgewählte Konfiguration erlaubt es nicht, SEB in einer virtuellen Maschine auszuführen.
@@ -591,17 +630,20 @@
     <Entry key="SystemControl_KeyboardLayoutTooltip">
         Das aktuelle Tastatur-Layout ist "%%LAYOUT%%"
     </Entry>
-    <Entry key="SystemControl_WirelessConnected">
-        Verbunden mit "%%NAME%%"
-    </Entry>
-    <Entry key="SystemControl_WirelessConnecting">
-        Verbinde...
-    </Entry>
-    <Entry key="SystemControl_WirelessDisconnected">
+    <Entry key="SystemControl_NetworkDisconnected">
         Getrennt
     </Entry>
-    <Entry key="SystemControl_WirelessNotAvailable">
-        Kein WLAN-Netzwerkadapter verfügbar oder eingestellt
+    <Entry key="SystemControl_NetworkNotAvailable">
+        Kein Netzwerkadapter verfügbar oder eingestellt
+    </Entry>
+    <Entry key="SystemControl_NetworkWiredConnected">
+        Verbunden
+    </Entry>
+    <Entry key="SystemControl_NetworkWirelessConnected">
+        Verbunden mit "%%NAME%%"
+    </Entry>
+    <Entry key="SystemControl_NetworkWirelessConnecting">
+        Verbinde...
     </Entry>
     <Entry key="Version">
         Version

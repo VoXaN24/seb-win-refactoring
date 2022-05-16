@@ -6,8 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+using System;
 using System.ComponentModel;
 using System.Windows;
+using SafeExamBrowser.Browser.Contracts.Events;
 using SafeExamBrowser.I18n.Contracts;
 using SafeExamBrowser.Logging.Contracts;
 using SafeExamBrowser.UserInterface.Contracts.Shell;
@@ -18,8 +20,11 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 {
 	internal partial class Taskbar : Window, ITaskbar
 	{
+		private readonly ILogger logger;
+
 		private bool allowClose;
-		private ILogger logger;
+		private bool isQuitButtonFocusedAtKeyDown;
+		private bool isFirstChildFocusedAtKeyDown;
 
 		public bool ShowClock
 		{
@@ -31,6 +36,7 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 			set { Dispatcher.Invoke(() => QuitButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed); }
 		}
 
+		public event LoseFocusRequestedEventHandler LoseFocusRequested;
 		public event QuitButtonClickedEventHandler QuitButtonClicked;
 
 		internal Taskbar(ILogger logger)
@@ -77,6 +83,23 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 			Dispatcher.Invoke(base.Close);
 		}
 
+		public void Focus(bool forward)
+		{
+			Dispatcher.BeginInvoke((Action) (() =>
+			{
+				Activate();
+
+				if (forward)
+				{
+					SetFocusWithin(ApplicationStackPanel.Children[0]);
+				}
+				else
+				{
+					QuitButton.Focus();
+				}
+			}));
+		}
+
 		public int GetAbsoluteHeight()
 		{
 			return Dispatcher.Invoke(() =>
@@ -116,17 +139,36 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 			});
 		}
 
+		private void InitializeTaskbar()
+		{
+			Closing += Taskbar_Closing;
+			Loaded += (o, args) => InitializeBounds();
+			QuitButton.Clicked += QuitButton_Clicked;
+		}
+
 		public void InitializeText(IText text)
 		{
 			Dispatcher.Invoke(() =>
 			{
-				QuitButton.ToolTip = text.Get(TextKey.Shell_QuitButton);
+				var txt = text.Get(TextKey.Shell_QuitButton);
+				QuitButton.ToolTip = txt;
+				QuitButton.SetValue(System.Windows.Automation.AutomationProperties.NameProperty, txt);
 			});
+		}
+
+		public void Register(ITaskbarActivator activator)
+		{
+			activator.Activated += Activator_Activated;
 		}
 
 		public new void Show()
 		{
 			Dispatcher.Invoke(base.Show);
+		}
+
+		private void Activator_Activated()
+		{
+			(this as ITaskbar).Focus(true);
 		}
 
 		private void QuitButton_Clicked(CancelEventArgs args)
@@ -153,11 +195,68 @@ namespace SafeExamBrowser.UserInterface.Desktop.Windows
 			}
 		}
 
-		private void InitializeTaskbar()
+		private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
 		{
-			Closing += Taskbar_Closing;
-			Loaded += (o, args) => InitializeBounds();
-			QuitButton.Clicked += QuitButton_Clicked;
+			isQuitButtonFocusedAtKeyDown = QuitButton.IsKeyboardFocusWithin;
+			isFirstChildFocusedAtKeyDown = ApplicationStackPanel.Children[0].IsKeyboardFocusWithin;
+		}
+
+		private void Window_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+		{
+			if (e.Key == System.Windows.Input.Key.Tab)
+			{
+				var shift = System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift);
+				if (!shift && ApplicationStackPanel.Children[0].IsKeyboardFocusWithin && isQuitButtonFocusedAtKeyDown)
+				{
+					LoseFocusRequested?.Invoke(true);
+					e.Handled = true;
+				}
+				else if (shift && QuitButton.IsKeyboardFocusWithin && isFirstChildFocusedAtKeyDown)
+				{
+					LoseFocusRequested?.Invoke(false);
+					e.Handled = true;
+				}
+			}
+
+			isQuitButtonFocusedAtKeyDown = false;
+			isFirstChildFocusedAtKeyDown = false;
+		}
+
+		private bool SetFocusWithin(UIElement uIElement)
+		{
+			if (uIElement.Focusable)
+			{
+				uIElement.Focus();
+
+				return true;
+			}
+
+			if (uIElement is System.Windows.Controls.Panel)
+			{
+				var panel = uIElement as System.Windows.Controls.Panel;
+
+				for (var i = 0; i < panel.Children.Count; i++)
+				{
+					if (SetFocusWithin(panel.Children[i]))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+			else if (uIElement is System.Windows.Controls.ContentControl)
+			{
+				var control = uIElement as System.Windows.Controls.ContentControl;
+				var content = control.Content as UIElement;
+
+				if (content != null)
+				{
+					return SetFocusWithin(content);
+				}
+			}
+
+			return false;
 		}
 	}
 }

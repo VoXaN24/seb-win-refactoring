@@ -19,6 +19,7 @@ using SafeExamBrowser.Server.Contracts;
 using SafeExamBrowser.Server.Contracts.Data;
 using SafeExamBrowser.Settings;
 using SafeExamBrowser.SystemComponents.Contracts;
+using SafeExamBrowser.UserInterface.Contracts.MessageBox;
 
 namespace SafeExamBrowser.Runtime.Operations
 {
@@ -98,7 +99,16 @@ namespace SafeExamBrowser.Runtime.Operations
 		{
 			if (Context.Current.Settings.SessionMode == SessionMode.Server)
 			{
-				InitializeNextSession();
+				if (Context.Next.Settings.SessionMode == SessionMode.Server)
+				{
+					ShowReconfigurationError();
+
+					return OperationResult.Aborted;
+				}
+				else
+				{
+					return Revert();
+				}
 			}
 			else if (Context.Next.Settings.SessionMode == SessionMode.Server)
 			{
@@ -135,19 +145,6 @@ namespace SafeExamBrowser.Runtime.Operations
 		protected override void InvokeActionRequired(ActionRequiredEventArgs args)
 		{
 			ActionRequired?.Invoke(args);
-		}
-
-		private void InitializeNextSession()
-		{
-			logger.Info("Initializing server configuration for next session...");
-
-			Context.Next.AppConfig.ServerApi = Context.Current.AppConfig.ServerApi;
-			Context.Next.AppConfig.ServerConnectionToken = Context.Current.AppConfig.ServerConnectionToken;
-			Context.Next.AppConfig.ServerExamId = Context.Current.AppConfig.ServerExamId;
-			Context.Next.AppConfig.ServerOauth2Token = Context.Current.AppConfig.ServerOauth2Token;
-
-			Context.Next.Settings = Context.Current.Settings;
-			Context.Next.Settings.SessionMode = SessionMode.Server;
 		}
 
 		private OperationResult TryLoadServerSettings(Exam exam, Uri uri)
@@ -255,6 +252,20 @@ namespace SafeExamBrowser.Runtime.Operations
 			}
 
 			return success;
+		}
+
+		private void ShowReconfigurationError()
+		{
+			var args = new MessageEventArgs
+			{
+				Action = MessageBoxAction.Ok,
+				Icon = MessageBoxIcon.Warning,
+				Message = TextKey.MessageBox_ServerReconfigurationWarning,
+				Title = TextKey.MessageBox_ServerReconfigurationWarningTitle
+			};
+			logger.Warn("Server reconfiguration requested but is not allowed.");
+
+			ActionRequired?.Invoke(args);
 		}
 	}
 }

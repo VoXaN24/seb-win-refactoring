@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+using SafeExamBrowser.Browser.Contracts.Events;
 using SafeExamBrowser.I18n.Contracts;
 using SafeExamBrowser.UserInterface.Contracts.Shell.Events;
 
@@ -32,6 +33,11 @@ namespace SafeExamBrowser.UserInterface.Contracts.Shell
 		event QuitButtonClickedEventHandler QuitButtonClicked;
 
 		/// <summary>
+		/// Event fired when the Taskbar wants to lose focus.
+		/// </summary>
+		event LoseFocusRequestedEventHandler LoseFocusRequested;
+
+		/// <summary>
 		/// Adds the given application control to the taskbar.
 		/// </summary>
 		void AddApplicationControl(IApplicationControl control, bool atFirstPosition = false);
@@ -52,6 +58,11 @@ namespace SafeExamBrowser.UserInterface.Contracts.Shell
 		void Close();
 
 		/// <summary>
+		/// Puts the focus on the taskbar.
+		/// </summary>
+		void Focus(bool forward = true);
+
+		/// <summary>
 		/// Returns the absolute height of the taskbar (i.e. in physical pixels).
 		/// </summary>
 		int GetAbsoluteHeight();
@@ -65,6 +76,11 @@ namespace SafeExamBrowser.UserInterface.Contracts.Shell
 		/// Initializes all text elements in the taskbar.
 		/// </summary>
 		void InitializeText(IText text);
+
+		/// <summary>
+		/// Registers the specified activator for the taskbar.
+		/// </summary>
+		void Register(ITaskbarActivator activator);
 
 		/// <summary>
 		/// Shows the taskbar.

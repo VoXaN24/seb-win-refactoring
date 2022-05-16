@@ -41,7 +41,14 @@ namespace SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter
 			InitializeLayouts();
 
 			keyboard.LayoutChanged += Keyboard_LayoutChanged;
-			Button.Click += (o, args) => Popup.IsOpen = !Popup.IsOpen;
+			Button.Click += (o, args) =>
+			{
+				Popup.IsOpen = !Popup.IsOpen;
+				this.Dispatcher.BeginInvoke((System.Action)(() =>
+				{
+					LayoutsStackPanel.Children[0].Focus();
+				}));
+			};
 			Button.MouseLeave += (o, args) => Task.Delay(250).ContinueWith(_ => Dispatcher.Invoke(() => Popup.IsOpen = Popup.IsMouseOver));
 			Popup.MouseLeave += (o, args) => Task.Delay(250).ContinueWith(_ => Dispatcher.Invoke(() => Popup.IsOpen = IsMouseOver));
 			Popup.Opened += (o, args) => Grid.Background = Brushes.Gray;
@@ -77,7 +84,7 @@ namespace SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter
 
 		private void SetCurrent(IKeyboardLayout layout)
 		{
-			var tooltip = text.Get(TextKey.SystemControl_KeyboardLayoutTooltip).Replace("%%LAYOUT%%", layout.Name);
+			var tooltip = text.Get(TextKey.SystemControl_KeyboardLayoutTooltip).Replace("%%LAYOUT%%", layout.CultureName);
 
 			foreach (var child in LayoutsStackPanel.Children)
 			{
@@ -87,8 +94,17 @@ namespace SafeExamBrowser.UserInterface.Desktop.Controls.ActionCenter
 				}
 			}
 
-			Text.Text = layout.Name;
+			Text.Text = layout.CultureName;
 			Button.ToolTip = tooltip;
+		}
+
+		private void Popup_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+		{
+			if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Escape)
+			{
+				Popup.IsOpen = false;
+				Button.Focus();
+			}
 		}
 	}
 }

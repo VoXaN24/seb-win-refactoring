@@ -20,10 +20,13 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 {
 	internal partial class RuntimeWindow : Window, IRuntimeWindow
 	{
+		private readonly AppConfig appConfig;
+		private readonly IText text;
+
 		private bool allowClose;
-		private AppConfig appConfig;
-		private IText text;
 		private RuntimeWindowViewModel model;
+
+		private WindowClosedEventHandler closed;
 		private WindowClosingEventHandler closing;
 
 		public bool ShowLog
@@ -33,19 +36,18 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 
 		public bool ShowProgressBar
 		{
-			set
-			{
-				Dispatcher.Invoke(() =>
-				{
-					model.AnimatedBorderVisibility = value ? Visibility.Hidden : Visibility.Visible;
-					model.ProgressBarVisibility = value ? Visibility.Visible : Visibility.Hidden;
-				});
-			}
+			set => Dispatcher.Invoke(() => model.ProgressBarVisibility = value ? Visibility.Visible : Visibility.Hidden);
 		}
 
 		public bool TopMost
 		{
 			set => Dispatcher.Invoke(() => Topmost = value);
+		}
+
+		event WindowClosedEventHandler IWindow.Closed
+		{
+			add { closed += value; }
+			remove { closed -= value; }
 		}
 
 		event WindowClosingEventHandler IWindow.Closing
@@ -74,6 +76,7 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 			{
 				allowClose = true;
 				model.BusyIndication = false;
+				closing?.Invoke();
 
 				base.Close();
 			});
@@ -141,10 +144,10 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 			InfoTextBlock.Inlines.Add(new Run(appConfig.ProgramCopyright) { FontSize = 10, Foreground = Brushes.Gray });
 
 			model = new RuntimeWindowViewModel(LogTextBlock);
-			AnimatedBorder.DataContext = model;
 			ProgressBar.DataContext = model;
 			StatusTextBlock.DataContext = model;
 
+			Closed += (o, args) => closed?.Invoke();
 			Closing += (o, args) => args.Cancel = !allowClose;
 
 #if DEBUG

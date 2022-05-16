@@ -24,14 +24,15 @@ namespace SafeExamBrowser.Browser.Handlers
 {
 	internal class DownloadHandler : IDownloadHandler
 	{
-		private AppConfig appConfig;
-		private BrowserSettings settings;
-		private WindowSettings windowSettings;
-		private ConcurrentDictionary<int, DownloadFinishedCallback> callbacks;
-		private ConcurrentDictionary<int, Guid> downloads;
-		private ILogger logger;
+		private readonly AppConfig appConfig;
+		private readonly ConcurrentDictionary<int, DownloadFinishedCallback> callbacks;
+		private readonly ConcurrentDictionary<int, Guid> downloads;
+		private readonly ILogger logger;
+		private readonly BrowserSettings settings;
+		private readonly WindowSettings windowSettings;
 
 		internal event DownloadRequestedEventHandler ConfigurationDownloadRequested;
+		internal event DownloadAbortedEventHandler DownloadAborted;
 		internal event DownloadUpdatedEventHandler DownloadUpdated;
 
 		internal DownloadHandler(AppConfig appConfig, ILogger logger, BrowserSettings settings, WindowSettings windowSettings)
@@ -42,6 +43,11 @@ namespace SafeExamBrowser.Browser.Handlers
 			this.logger = logger;
 			this.settings = settings;
 			this.windowSettings = windowSettings;
+		}
+
+		public bool CanDownload(IWebBrowser chromiumWebBrowser, IBrowser browser, string url, string requestMethod)
+		{
+			return true;
 		}
 
 		public void OnBeforeDownload(IWebBrowser webBrowser, IBrowser browser, DownloadItem downloadItem, IBeforeDownloadCallback callback)
@@ -68,6 +74,7 @@ namespace SafeExamBrowser.Browser.Handlers
 			else
 			{
 				logger.Info($"Aborted download request{(windowSettings.UrlPolicy.CanLog() ? $" for '{uri}'" : "")}, as downloading is not allowed.");
+				Task.Run(() => DownloadAborted?.Invoke());
 			}
 		}
 
@@ -85,7 +92,7 @@ namespace SafeExamBrowser.Browser.Handlers
 					IsComplete = downloadItem.IsComplete,
 					Url = downloadItem.Url
 				};
-				
+
 				Task.Run(() => DownloadUpdated?.Invoke(state));
 			}
 

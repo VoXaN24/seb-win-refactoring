@@ -14,8 +14,10 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
+using SafeExamBrowser.Browser.Contracts.Events;
 using SafeExamBrowser.Core.Contracts.Resources.Icons;
 using SafeExamBrowser.I18n.Contracts;
+using SafeExamBrowser.Logging.Contracts;
 using SafeExamBrowser.Settings.Browser;
 using SafeExamBrowser.UserInterface.Contracts;
 using SafeExamBrowser.UserInterface.Contracts.Browser;
@@ -30,9 +32,12 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 {
 	internal partial class BrowserWindow : Window, IBrowserWindow
 	{
-		private bool isMainWindow;
-		private BrowserSettings settings;
-		private IText text;
+		private readonly bool isMainWindow;
+		private readonly ILogger logger;
+		private readonly BrowserSettings settings;
+		private readonly IText text;
+
+		private WindowClosedEventHandler closed;
 		private WindowClosingEventHandler closing;
 
 		private WindowSettings WindowSettings
@@ -49,11 +54,18 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 		public event ActionRequestedEventHandler DeveloperConsoleRequested;
 		public event FindRequestedEventHandler FindRequested;
 		public event ActionRequestedEventHandler ForwardNavigationRequested;
+		public event LoseFocusRequestedEventHandler LoseFocusRequested { add { } remove { } }
 		public event ActionRequestedEventHandler HomeNavigationRequested;
 		public event ActionRequestedEventHandler ReloadRequested;
 		public event ActionRequestedEventHandler ZoomInRequested;
 		public event ActionRequestedEventHandler ZoomOutRequested;
 		public event ActionRequestedEventHandler ZoomResetRequested;
+
+		event WindowClosedEventHandler IWindow.Closed
+		{
+			add { closed += value; }
+			remove { closed -= value; }
+		}
 
 		event WindowClosingEventHandler IWindow.Closing
 		{
@@ -61,9 +73,10 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 			remove { closing -= value; }
 		}
 
-		internal BrowserWindow(IBrowserControl browserControl, BrowserSettings settings, bool isMainWindow, IText text)
+		internal BrowserWindow(IBrowserControl browserControl, BrowserSettings settings, bool isMainWindow, IText text, ILogger logger)
 		{
 			this.isMainWindow = isMainWindow;
+			this.logger = logger;
 			this.settings = settings;
 			this.text = text;
 
@@ -282,7 +295,7 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 
 		private void InitializeBrowserWindow(IBrowserControl browserControl)
 		{
-			if (browserControl is System.Windows.Forms.Control control)
+			if (browserControl.EmbeddableControl is System.Windows.Forms.Control control)
 			{
 				BrowserControlHost.Child = control;
 			}
@@ -297,6 +310,7 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 		private void RegisterEvents()
 		{
 			BackwardButton.Click += (o, args) => BackwardNavigationRequested?.Invoke();
+			Closed += (o, args) => closed?.Invoke();
 			Closing += BrowserWindow_Closing;
 			DeveloperConsoleButton.Click += (o, args) => DeveloperConsoleRequested?.Invoke();
 			DownloadsButton.Click += (o, args) => DownloadsPopup.IsOpen = !DownloadsPopup.IsOpen;
@@ -444,6 +458,26 @@ namespace SafeExamBrowser.UserInterface.Mobile.Windows
 			FindCaseSensitiveCheckBox.Content = text.Get(TextKey.BrowserWindow_FindCaseSensitive);
 			FindMenuText.Text = text.Get(TextKey.BrowserWindow_FindMenuItem);
 			ZoomText.Text = text.Get(TextKey.BrowserWindow_ZoomMenuItem);
+		}
+
+		public void FocusToolbar(bool forward)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void FocusBrowser()
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Debug()
+		{
+			throw new NotImplementedException();
+		}
+
+		public void FocusAddressBar()
+		{
+			this.UrlTextBox.Focus();
 		}
 	}
 }

@@ -110,11 +110,11 @@
     <Compile Include="Controls\ActionCenter\QuitButton.xaml.cs">
       <DependentUpon>QuitButton.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ActionCenter\WirelessNetworkButton.xaml.cs">
-      <DependentUpon>WirelessNetworkButton.xaml</DependentUpon>
+    <Compile Include="Controls\ActionCenter\NetworkButton.xaml.cs">
+      <DependentUpon>NetworkButton.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\ActionCenter\WirelessNetworkControl.xaml.cs">
-      <DependentUpon>WirelessNetworkControl.xaml</DependentUpon>
+    <Compile Include="Controls\ActionCenter\NetworkControl.xaml.cs">
+      <DependentUpon>NetworkControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\Browser\DownloadItemControl.xaml.cs">
       <DependentUpon>DownloadItemControl.xaml</DependentUpon>
@@ -146,11 +146,11 @@
     <Compile Include="Controls\Taskbar\QuitButton.xaml.cs">
       <DependentUpon>QuitButton.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Taskbar\WirelessNetworkButton.xaml.cs">
-      <DependentUpon>WirelessNetworkButton.xaml</DependentUpon>
+    <Compile Include="Controls\Taskbar\NetworkButton.xaml.cs">
+      <DependentUpon>NetworkButton.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Taskbar\WirelessNetworkControl.xaml.cs">
-      <DependentUpon>WirelessNetworkControl.xaml</DependentUpon>
+    <Compile Include="Controls\Taskbar\NetworkControl.xaml.cs">
+      <DependentUpon>NetworkControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\Taskview\WindowControl.xaml.cs">
       <DependentUpon>WindowControl.xaml</DependentUpon>
@@ -206,6 +206,10 @@
     <ProjectReference Include="..\SafeExamBrowser.Applications.Contracts\SafeExamBrowser.Applications.Contracts.csproj">
       <Project>{ac77745d-3b41-43e2-8e84-d40e5a4ee77f}</Project>
       <Name>SafeExamBrowser.Applications.Contracts</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SafeExamBrowser.Browser.Contracts\SafeExamBrowser.Browser.Contracts.csproj">
+      <Project>{5fb5273d-277c-41dd-8593-a25ce1aff2e9}</Project>
+      <Name>SafeExamBrowser.Browser.Contracts</Name>
     </ProjectReference>
     <ProjectReference Include="..\SafeExamBrowser.Configuration.Contracts\SafeExamBrowser.Configuration.Contracts.csproj">
       <Project>{7d74555e-63e1-4c46-bd0a-8580552368c8}</Project>
@@ -321,11 +325,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ActionCenter\WirelessNetworkButton.xaml">
+    <Page Include="Controls\ActionCenter\NetworkButton.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\ActionCenter\WirelessNetworkControl.xaml">
+    <Page Include="Controls\ActionCenter\NetworkControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -369,11 +373,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\Taskbar\WirelessNetworkButton.xaml">
+    <Page Include="Controls\Taskbar\NetworkButton.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\Taskbar\WirelessNetworkControl.xaml">
+    <Page Include="Controls\Taskbar\NetworkControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

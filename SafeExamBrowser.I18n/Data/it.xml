@@ -48,6 +48,27 @@
     <Entry key="BrowserWindow_FindMenuItem">
         Pagina di ricerca ...
     </Entry>
+    <Entry key="BrowserWindow_ReloadButton">
+        Ricarica
+    </Entry>
+    <Entry key="BrowserWindow_BackwardButton">
+        Indietro
+    </Entry>
+    <Entry key="BrowserWindow_ForwardButton">
+        Avanti
+    </Entry>
+    <Entry key="BrowserWindow_DownloadsButton">
+        Scaricare
+    </Entry>
+    <Entry key="BrowserWindow_HomeButton">
+        Home
+    </Entry>
+    <Entry key="BrowserWindow_MenuButton">
+        Menu
+    </Entry>
+    <Entry key="BrowserWindow_UrlTextBox">
+        Inserisci URL
+    </Entry>
     <Entry key="BrowserWindow_ZoomMenuItem">
         Zoom della pagina
     </Entry>
@@ -231,6 +252,12 @@
     <Entry key="MessageBox_DisplayConfigurationInternalOrExternal">
         interno/i o esterno/i
     </Entry>
+    <Entry key="MessageBox_DownloadNotAllowed">
+        Il download di file non è consentito nelle impostazioni SEB correnti. Si prega di segnalarlo al fornitore dell'esame.
+    </Entry>
+    <Entry key="MessageBox_DownloadNotAllowedTitle">
+        Download non consentito!
+    </Entry>
     <Entry key="MessageBox_InvalidConfigurationData">
         La risorsa di configurazione "%%URI%%" contiene dati non validi!
     </Entry>
@@ -315,6 +342,12 @@
     <Entry key="MessageBox_RemoteSessionNotAllowedTitle">
         Sessione remota rilevata
     </Entry>
+    <Entry key="MessageBox_ServerReconfigurationWarning">
+        È già in esecuzione una sessione del server SEB. Non è consentita la riconfigurazione per un'altra sessione del server SEB.
+    </Entry>
+    <Entry key="MessageBox_ServerReconfigurationWarningTitle">
+        Riconfigurazione non consentita
+    </Entry>
     <Entry key="MessageBox_ServiceUnavailableError">
         Impossibile inizializzare il servizio SEB! SEB verrà ora terminato poiché il servizio è configurato per essere obbligatorio.
     </Entry>
@@ -350,6 +383,12 @@
     </Entry>
     <Entry key="MessageBox_UnexpectedConfigurationErrorTitle">
         Errore di configurazione
+    </Entry>
+    <Entry key="MessageBox_UploadNotAllowed">
+        Il upload di file non è consentito nelle impostazioni SEB correnti. Si prega di segnalarlo al fornitore dell'esame.
+    </Entry>
+    <Entry key="MessageBox_UploadNotAllowedTitle">
+        Upload non consentito!
     </Entry>
     <Entry key="MessageBox_VirtualMachineNotAllowed">
         Questo computer sembra essere una macchina virtuale. La configurazione selezionata non consente l'esecuzione di SEB in una macchina virtuale.
@@ -591,17 +630,20 @@
     <Entry key="SystemControl_KeyboardLayoutTooltip">
         L'attuale layout della tastiera è "%%LAYOUT%%"
     </Entry>
-    <Entry key="SystemControl_WirelessConnected">
-        Collegato a "%%NAME%%"
-    </Entry>
-    <Entry key="SystemControl_WirelessConnecting">
-        Collegamento...
-    </Entry>
-    <Entry key="SystemControl_WirelessDisconnected">
+    <Entry key="SystemControl_NetworkDisconnected">
         Disconnesso
     </Entry>
-    <Entry key="SystemControl_WirelessNotAvailable">
+    <Entry key="SystemControl_NetworkNotAvailable">
         Nessun adattatore di rete wireless disponibile o attivato
+    </Entry>
+    <Entry key="SystemControl_NetworkWiredConnected">
+        Collegato
+    </Entry>
+    <Entry key="SystemControl_NetworkWirelessConnected">
+        Collegato a "%%NAME%%"
+    </Entry>
+    <Entry key="SystemControl_NetworkWirelessConnecting">
+        Collegamento...
     </Entry>
     <Entry key="Version">
         Versione

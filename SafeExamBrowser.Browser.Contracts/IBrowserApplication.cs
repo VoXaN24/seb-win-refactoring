@@ -30,5 +30,16 @@ namespace SafeExamBrowser.Browser.Contracts
 		/// Event fired when the browser application detects a request to terminate SEB.
 		/// </summary>
 		event TerminationRequestedEventHandler TerminationRequested;
+
+		/// <summary>
+		/// Event fired when the user tries to focus the taskbar.
+		/// </summary>
+		event LoseFocusRequestedEventHandler LoseFocusRequested;
+
+		/// <summary>
+		/// Transfers the focus to the browser application. If the parameter is <c>true</c>, the first focusable element in the browser window
+		/// receives focus (passing forward of focus). Otherwise, the last element receives focus.
+		/// </summary>
+		void Focus(bool forward);
 	}
 }
